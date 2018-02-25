@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+
+from scipy import misc
+import numpy as np
+import os.path
+
+# Import an image as np array
+#
+
+# Specify data path
+path = "../_data/train_data/"
+
+# Specify file to load
+fn = '00001.jpg'
+
+fp = os.path.join(path, fn)
+
+# Import an image
+im = misc.imread(fp)
+
+print(im.shape,im.dtype)
