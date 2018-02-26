@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pdb
 import aux
 import mxnet as mx
 import numpy as np
@@ -11,10 +12,10 @@ d_inputs = 784
 k_outputs = 5
 
 # Maximum number of epochs
-epochs = 5
+epochs = 12
 
 # Define the learning rate
-learn_rate = 0.005
+learn_rate = 0.5
 
 # Run everything on CPU
 cntx = mx.cpu()
@@ -41,23 +42,31 @@ W0= nd.random_normal(shape=k_outputs,ctx=cntx)
 prams = [W, W0]
 
 
-# Track parameter graphs on the fly for later
-# automatic differentiation
+# Track the gradients of the parameters
 for parameter in prams:
     parameter.attach_grad()
 
-# Execute training loop
+# Execute training loop using SGD
 for E in range(epochs):
     total_loss = 0
-    for i, (xtrain, label_train) in enumerate(train_data):
-        xdata = xtrain.as_in_context(cntx).reshape((-1,784))
-        ylabel = label_train.as_in_context(cntx)
-        ylabel_flag = nd.one_hot(ylabel,5)
+    for i, (xtrain, ytrain) in enumerate(train_data):
+        xtrain = xtrain.as_in_context(cntx).reshape((-1,784))
+        ytrain = ytrain.as_in_context(cntx)
+        ylabel_flag = nd.one_hot(ytrain,5)
         with autograd.record():
             y_out = aux.nnet(xtrain,W,W0)
             loss = aux.cross_ent(y_out, ylabel_flag)
         loss.backward()
-        aux.SGD(prams, learn_rate)
+        prams = aux.SGD(prams, learn_rate)
         total_loss += nd.sum(loss).asscalar()
 
+    # Evaluate model on training data
+    train_accuracy = aux.compute_accuracy(train_data, aux.nnet, prams, cntx)
 
+    # Evaluate model on testing data
+    test_accuracy = aux.compute_accuracy(test_data, aux.nnet, prams, cntx)
+    print("Epoch %s. Loss: %s, Train Accuracy: %s, Test Accuracy: %s" %
+          (E, total_loss/m_cases, train_accuracy, test_accuracy))
+
+    # Save trained parameters
+    aux.save_mnist(prams)

@@ -4,6 +4,7 @@ import os
 import numpy as np
 from scipy import misc
 from pickle import dump
+import pdb
 
 ############################################################################
 # Fuction:  load_mnist                                                     #
@@ -28,10 +29,9 @@ def load_mnist(path, kind):
     # Load the output label traget values
     labels = np.loadtxt(label_path,
                         dtype=np.float32)[:,None]
-
     # Load the input data values
     #
-    images = [misc.imread('%s%s' % (image_path,fn)).flatten() for fn in os.listdir(image_path)]
+    images = [misc.imread('%s%s' % (image_path,fn)).flatten() for fn in sorted(os.listdir(image_path))]
     images = np.asarray(images, dtype=np.float32) / 255
 
 
@@ -46,5 +46,8 @@ def load_mnist(path, kind):
 
 # Save the trained weights to text file
 def save_mnist(weights):
-    with open("../out/multiclass_parameters.txt", "wb") as fp:
-        dump(weights, fp)
+    W_trained = []
+    for i, W in enumerate(weights):
+        W_trained.append( W.asnumpy() )
+    with open("out/multiclass_parameters.txt", "w+b") as fp:
+        dump(W_trained, fp)
